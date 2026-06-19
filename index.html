@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuadDesk · บอร์ดจัดลำดับงาน</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'><path d='M9 3H14.25A1 1 0 0 1 15.25 4V14.25A1 1 0 0 1 14.25 15.25H4A1 1 0 0 1 3 14.25V9A6 6 0 0 1 9 3Z' fill='%23D9543B'/><path d='M17.75 3H23A6 6 0 0 1 29 9V14.25A1 1 0 0 1 28 15.25H17.75A1 1 0 0 1 16.75 14.25V4A1 1 0 0 1 17.75 3Z' fill='%231F8F7E'/><path d='M4 16.75H14.25A1 1 0 0 1 15.25 17.75V28A1 1 0 0 1 14.25 29H9A6 6 0 0 1 3 23V17.75A1 1 0 0 1 4 16.75Z' fill='%23C2871A'/><path d='M17.75 16.75H28A1 1 0 0 1 29 17.75V23A6 6 0 0 1 23 29H17.75A1 1 0 0 1 16.75 28V17.75A1 1 0 0 1 17.75 16.75Z' fill='%237E8896'/><path d='M6 9.4L8.3 11.7L12 6.3' stroke='%23fff' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F5F7;
+    --surface: #FFFFFF;
+    --text: #1B1E24;
+    --muted: #6B7280;
+    --faint: #9AA1AC;
+    --line: #E4E6EB;
+    --line-strong: #D2D6DD;
+    --shadow: 0 1px 2px rgba(20,22,28,.06), 0 2px 8px rgba(20,22,28,.04);
+
+    --do: #D9543B;     --do-tint: #FCEFEC;
+    --sch: #1F8F7E;    --sch-tint: #E8F5F1;
+    --del: #C2871A;    --del-tint: #FBF2DF;
+    --eli: #6B7686;    --eli-tint: #EDEFF2;
+
+    --ui: "Noto Sans Thai", "Space Grotesk", system-ui, -apple-system, sans-serif;
+    --display: "Space Grotesk", "Noto Sans Thai", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  }
+  html[data-theme="dark"] {
+    --bg: #131519;
+    --surface: #1B1E25;
+    --text: #E7E9ED;
+    --muted: #949AA6;
+    --faint: #6A7180;
+    --line: #2A2E37;
+    --line-strong: #353A45;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 2px 10px rgba(0,0,0,.25);
+
+    --do: #E8705A;     --do-tint: #2A1A16;
+    --sch: #3FB39E;    --sch-tint: #14231F;
+    --del: #E0A93E;    --del-tint: #271F12;
+    --eli: #8A93A3;    --eli-tint: #1E222A;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--ui);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* ---------- top bar ---------- */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: clamp(14px, 3vw, 18px) clamp(16px, 4vw, 24px) 14px;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo { width: 44px; height: 44px; flex: none; display: block; }
+  .brand-text { display: flex; flex-direction: column; }
+  .brand-top { display: flex; align-items: baseline; gap: 12px; }
+  .tagline { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .brand h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(19px, 1.4vw + 16px, 22px);
+    letter-spacing: -.02em;
+    margin: 0;
+  }
+  .brand .sub {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--faint);
+    letter-spacing: .02em;
+  }
+  .tools { display: flex; align-items: center; gap: 6px; }
+  .tbtn {
+    font-family: var(--ui);
+    font-size: 12.5px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 11px;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .tbtn:hover { color: var(--text); border-color: var(--line-strong); background: var(--surface); }
+  .tbtn:focus-visible { outline: 2px solid var(--sch); outline-offset: 2px; }
+
+  /* export dropdown */
+  .dropdown { position: relative; }
+  .dropdown .caret { font-size: 9px; margin-left: 5px; opacity: .65; }
+  .dropdown-menu {
+    position: absolute; top: calc(100% + 6px); left: 0;
+    min-width: 210px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 5px;
+    display: none; flex-direction: column; gap: 2px;
+    z-index: 30;
+  }
+  .dropdown.open .dropdown-menu { display: flex; }
+  .dropdown.open .caret { opacity: 1; }
+  .dd-item {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+    text-align: left; width: 100%;
+    background: transparent; border: none; border-radius: 7px;
+    padding: 8px 11px; cursor: pointer;
+    font-family: var(--ui);
+    transition: background .12s;
+  }
+  .dd-item:hover { background: var(--bg); }
+  .dd-item:focus-visible { outline: 2px solid var(--sch); outline-offset: -2px; }
+  .dd-title { font-size: 13.5px; color: var(--text); }
+  .dd-desc { font-family: var(--mono); font-size: 10.5px; color: var(--faint); letter-spacing: .02em; }
+
+  /* ---------- matrix layout ---------- */
+  main {
+    flex: 1;
+    padding: 0 clamp(16px, 4vw, 24px) 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: clamp(8px, 1.4vw, 10px);
+    min-height: 0;
+  }
+  /* ---------- quadrant ---------- */
+  .quad {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .quad::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: var(--qtint);
+    opacity: 0;
+    transition: opacity .15s;
+    pointer-events: none;
+  }
+  .quad.dragover { border-color: var(--qcolor); }
+  .quad.dragover::before { opacity: .55; }
+
+  .quad-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 15px 11px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--qcolor); flex: none; }
+  .quad-head .verb {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 15.5px;
+    letter-spacing: -.01em;
+  }
+  .quad-head .en {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--faint);
+    letter-spacing: .04em;
+  }
+  .quad-head .tag {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: stretch;
+    border-radius: 999px;
+    overflow: hidden;
+    font-family: var(--ui);
+    font-size: 11px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .quad-head .tag .seg {
+    padding: 4px 9px;
+    color: #fff;
+    font-weight: 500;
+  }
+  .quad-head .tag .u-on  { background: #D9543B; }   /* ด่วน */
+  .quad-head .tag .i-on  { background: #1F8F7E; }   /* สำคัญ */
+  .quad-head .tag .u-off,
+  .quad-head .tag .i-off { background: #7E8896; }   /* ไม่ด่วน / ไม่สำคัญ */
+  .count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+    min-width: 16px;
+    text-align: right;
+  }
+
+  .quad-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 8px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: relative;
+  }
+  .quad-body::-webkit-scrollbar { width: 8px; }
+  .quad-body::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 8px; }
+
+  .empty {
+    color: var(--faint);
+    font-size: 12.5px;
+    text-align: center;
+    padding: 18px 8px;
+    line-height: 1.5;
+  }
+
+  /* ---------- task card ---------- */
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 9px 10px;
+    cursor: grab;
+    transition: border-color .12s, transform .08s, opacity .12s;
+  }
+  .task:hover { border-color: var(--line-strong); }
+  .task:active { cursor: grabbing; }
+  .task.dragging { opacity: .4; }
+  .task.done { opacity: .5; }
+  .task.done .txt { text-decoration: line-through; color: var(--muted); }
+
+  .check {
+    width: 17px; height: 17px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 5px;
+    flex: none;
+    margin-top: 1px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .12s, border-color .12s;
+  }
+  .check:hover { border-color: var(--qcolor); }
+  .task.done .check { background: var(--qcolor); border-color: var(--qcolor); }
+  .check svg { width: 11px; height: 11px; stroke: #fff; stroke-width: 3; fill: none; opacity: 0; transition: opacity .12s; }
+  .task.done .check svg { opacity: 1; }
+
+  .txt {
+    flex: 1;
+    font-size: 13.5px;
+    line-height: 1.4;
+    word-break: break-word;
+    white-space: pre-wrap;
+    cursor: text;
+  }
+  .txt-edit {
+    flex: 1;
+    font-family: var(--ui);
+    font-size: 13.5px;
+    line-height: 1.4;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    resize: none;
+    outline: none;
+    padding: 0;
+  }
+  .del-x {
+    flex: none;
+    width: 20px; height: 20px;
+    border: none; background: transparent;
+    color: var(--faint);
+    font-size: 16px; line-height: 1;
+    cursor: pointer;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity .12s, color .12s, background .12s;
+  }
+  .task:hover .del-x { opacity: 1; }
+  .del-x:hover { color: var(--do); background: var(--do-tint); }
+
+  /* ---------- add row ---------- */
+  .add {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 4px 4px 8px;
+    padding: 8px 10px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 9px;
+    color: var(--faint);
+    transition: border-color .12s;
+  }
+  .add:focus-within { border-color: var(--qcolor); border-style: solid; }
+  .add .plus { font-family: var(--mono); font-size: 15px; line-height: 1; }
+  .add input {
+    flex: 1;
+    border: none; background: transparent;
+    font-family: var(--ui); font-size: 13px;
+    color: var(--text); outline: none;
+  }
+  .add input::placeholder { color: var(--faint); }
+
+  /* ---------- footer ---------- */
+  footer {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 2vw, 16px);
+    padding: 12px clamp(16px, 4vw, 24px) 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+    flex-wrap: wrap;
+  }
+  footer .stat b { color: var(--text); font-weight: 500; }
+  footer .spacer { flex: 1; }
+  footer kbd {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--muted);
+  }
+
+  /* ---------- responsive ---------- */
+
+  /* ultrawide: keep the matrix from stretching uncomfortably */
+  @media (min-width: 1500px) {
+    header, main, footer {
+      width: 100%;
+      max-width: 1500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  /* tablet: tighten quadrant chrome */
+  @media (max-width: 960px) {
+    .quad-head { padding: 11px 12px 9px; gap: 8px; }
+    .quad-head .verb { font-size: 14.5px; }
+  }
+
+  /* phones: stack into one priority-ordered column, page scrolls */
+  @media (max-width: 720px) {
+    main {
+      grid-template-columns: 1fr;
+      grid-template-rows: none;
+      gap: 12px;
+    }
+    .quad {
+      grid-column: 1 !important;
+      grid-row: auto !important;
+      min-height: 0;
+      /* a thin colour rail replaces the hidden axes as the priority cue */
+      border-left: 3px solid var(--qcolor);
+    }
+    /* grow with content instead of an inner scroll pane (avoids nested scroll) */
+    .quad-body { overflow: visible; }
+    .quad-head { padding: 13px 14px 11px; }
+    .quad-head .verb { font-size: 15.5px; }
+    footer { justify-content: center; text-align: center; }
+  }
+
+  /* small phones: let the toolbar scroll sideways instead of wrapping */
+  @media (max-width: 560px) {
+    .tools {
+      width: 100%;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+    }
+    .tools::-webkit-scrollbar { display: none; }
+    .tbtn { flex: none; }
+    footer .spacer { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg class="brand-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M9 3H14.25A1 1 0 0 1 15.25 4V14.25A1 1 0 0 1 14.25 15.25H4A1 1 0 0 1 3 14.25V9A6 6 0 0 1 9 3Z" fill="#D9543B"/>
+      <path d="M17.75 3H23A6 6 0 0 1 29 9V14.25A1 1 0 0 1 28 15.25H17.75A1 1 0 0 1 16.75 14.25V4A1 1 0 0 1 17.75 3Z" fill="#1F8F7E"/>
+      <path d="M4 16.75H14.25A1 1 0 0 1 15.25 17.75V28A1 1 0 0 1 14.25 29H9A6 6 0 0 1 3 23V17.75A1 1 0 0 1 4 16.75Z" fill="#C2871A"/>
+      <path d="M17.75 16.75H28A1 1 0 0 1 29 17.75V23A6 6 0 0 1 23 29H17.75A1 1 0 0 1 16.75 28V17.75A1 1 0 0 1 17.75 16.75Z" fill="#7E8896"/>
+      <path d="M6 9.4L8.3 11.7L12 6.3" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="brand-text">
+      <div class="brand-top">
+        <h1>QuadDesk</h1>
+        <span class="sub" id="today"></span>
+      </div>
+      <div class="tagline">จัดคิวงานด้วย 4 ช่อง — ด่วนแค่ไหน สำคัญแค่ไหน</div>
+    </div>
+  </div>
+  <div class="tools">
+    <div class="dropdown" id="export-dd">
+      <button class="tbtn" id="btn-export" aria-haspopup="true" aria-expanded="false" title="ส่งออกข้อมูล">↓ ส่งออก<span class="caret">▾</span></button>
+      <div class="dropdown-menu" role="menu">
+        <button class="dd-item" id="btn-md" role="menuitem" title="ส่งออกเป็น Markdown (สำหรับ Obsidian)">
+          <span class="dd-title">Markdown</span>
+          <span class="dd-desc">.md — สำหรับ Obsidian / บันทึก</span>
+        </button>
+        <button class="dd-item" id="btn-json" role="menuitem" title="สำรองข้อมูลเป็นไฟล์ JSON">
+          <span class="dd-title">JSON</span>
+          <span class="dd-desc">.json — สำรอง / นำเข้ากลับได้</span>
+        </button>
+      </div>
+    </div>
+    <button class="tbtn" id="btn-import" title="นำเข้าจากไฟล์ JSON">↑ นำเข้า</button>
+    <button class="tbtn" id="btn-clear" title="ลบงานที่ทำเสร็จแล้วทั้งหมด">ล้างที่เสร็จ</button>
+    <button class="tbtn" id="btn-theme" title="สลับโหมดสว่าง/มืด">โหมด</button>
+    <input type="file" id="file" accept="application/json" hidden>
+  </div>
+</header>
+
+<main id="board">
+  <!-- quadrants injected here -->
+</main>
+
+<footer>
+  <span class="stat">ทั้งหมด <b id="s-total">0</b></span>
+  <span class="stat">ค้างอยู่ <b id="s-open">0</b></span>
+  <span class="stat">เสร็จแล้ว <b id="s-done">0</b></span>
+  <span class="spacer"></span>
+  <span>ดับเบิลคลิกเพื่อแก้ไข · ลากเพื่อย้าย · <kbd>Enter</kbd> เพิ่ม</span>
+</footer>
+
+<script>
+const QUADS = [
+  { id: "do",       verb: "ทำเลย",   en: "DO",       u: true,  i: true,  color: "var(--do)",  tint: "var(--do-tint)",  hint: "ด่วน + สำคัญ — ลงมือทันที" },
+  { id: "schedule", verb: "วางแผน",  en: "SCHEDULE", u: false, i: true,  color: "var(--sch)", tint: "var(--sch-tint)", hint: "สำคัญแต่ไม่ด่วน — กำหนดวันทำ" },
+  { id: "delegate", verb: "มอบหมาย", en: "DELEGATE", u: true,  i: false, color: "var(--del)", tint: "var(--del-tint)", hint: "ด่วนแต่ไม่สำคัญ — ส่งต่อหรือตัดเวลา" },
+  { id: "eliminate",verb: "ตัดทิ้ง", en: "ELIMINATE",u: false, i: false, color: "var(--eli)", tint: "var(--eli-tint)", hint: "ไม่ด่วนไม่สำคัญ — พิจารณาตัดออก" },
+];
+const ORDER = { do: 2, schedule: 3, delegate: 6, eliminate: 5 }; // grid placement
+const KEY = "eisenhower.tasks.v1";
+const THEME_KEY = "eisenhower.theme";
+
+let tasks = load();
+let dragId = null;
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch (e) { return []; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(tasks)); } catch (e) {}
+  renderStats();
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+/* ---------- theme ---------- */
+(function initTheme() {
+  let t;
+  try { t = localStorage.getItem(THEME_KEY); } catch (e) {}
+  if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", t);
+})();
+document.getElementById("btn-theme").onclick = () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+};
+
+/* ---------- date ---------- */
+document.getElementById("today").textContent =
+  new Date().toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long" });
+
+/* ---------- build quadrant shells once ---------- */
+const board = document.getElementById("board");
+QUADS.forEach(q => {
+  const el = document.createElement("section");
+  el.className = "quad";
+  el.dataset.q = q.id;
+  el.style.gridArea = "auto";
+  el.style.setProperty("grid-column", ((ORDER[q.id] - 2) % 2) ? "2" : "1");
+  el.style.setProperty("grid-row", ORDER[q.id] <= 3 ? "1" : "2");
+  el.style.setProperty("--qcolor", q.color);
+  el.style.setProperty("--qtint", q.tint);
+  el.innerHTML = `
+    <div class="quad-head">
+      <span class="dot"></span>
+      <span class="verb">${q.verb}</span>
+      <span class="en">${q.en}</span>
+      <span class="tag">
+        <span class="seg ${q.u ? 'u-on' : 'u-off'}">${q.u ? 'ด่วน' : 'ไม่ด่วน'}</span><span class="seg ${q.i ? 'i-on' : 'i-off'}">${q.i ? 'สำคัญ' : 'ไม่สำคัญ'}</span>
+      </span>
+      <span class="count" data-count="${q.id}">0</span>
+    </div>
+    <div class="quad-body" data-body="${q.id}"></div>
+    <label class="add" title="${q.hint}">
+      <span class="plus">+</span>
+      <input type="text" data-add="${q.id}" placeholder="เพิ่มงาน…">
+    </label>`;
+  board.appendChild(el);
+
+  // dropzone
+  el.addEventListener("dragover", e => {
+    e.preventDefault();
+    el.classList.add("dragover");
+  });
+  el.addEventListener("dragleave", e => {
+    if (!el.contains(e.relatedTarget)) el.classList.remove("dragover");
+  });
+  el.addEventListener("drop", e => {
+    e.preventDefault();
+    el.classList.remove("dragover");
+    if (!dragId) return;
+    const body = el.querySelector(".quad-body");
+    const after = getDragAfter(body, e.clientY);
+    moveTask(dragId, q.id, after);
+  });
+
+  // add-task input
+  const input = el.querySelector("[data-add]");
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter" && input.value.trim()) {
+      tasks.push({ id: uid(), text: input.value.trim(), q: q.id, done: false });
+      input.value = "";
+      save(); renderQuad(q.id);
+      el.querySelector("[data-add]").focus();
+    }
+  });
+});
+
+function getDragAfter(container, y) {
+  const cards = [...container.querySelectorAll(".task:not(.dragging)")];
+  let closest = { offset: -Infinity, el: null };
+  for (const c of cards) {
+    const box = c.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) closest = { offset, el: c };
+  }
+  return closest.el;
+}
+
+function moveTask(id, quad, beforeEl) {
+  const i = tasks.findIndex(t => t.id === id);
+  if (i < 0) return;
+  const [t] = tasks.splice(i, 1);
+  t.q = quad;
+  if (beforeEl) {
+    const beforeId = beforeEl.dataset.id;
+    const j = tasks.findIndex(x => x.id === beforeId);
+    tasks.splice(j, 0, t);
+  } else {
+    tasks.push(t);
+  }
+  save();
+  QUADS.forEach(q => renderQuad(q.id));
+}
+
+/* ---------- render ---------- */
+function renderQuad(qid) {
+  const body = document.querySelector(`[data-body="${qid}"]`);
+  const list = tasks.filter(t => t.q === qid);
+  body.innerHTML = "";
+  const q = QUADS.find(x => x.id === qid);
+  document.querySelector(`[data-count="${qid}"]`).textContent = list.filter(t => !t.done).length || "";
+
+  if (!list.length) {
+    body.innerHTML = `<div class="empty">${q.hint}</div>`;
+    return;
+  }
+  for (const t of list) body.appendChild(taskEl(t));
+}
+
+function taskEl(t) {
+  const el = document.createElement("div");
+  el.className = "task" + (t.done ? " done" : "");
+  el.draggable = true;
+  el.dataset.id = t.id;
+  el.innerHTML = `
+    <span class="check" title="ทำเครื่องหมายว่าเสร็จ"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>
+    <span class="txt"></span>
+    <button class="del-x" title="ลบงาน">×</button>`;
+  el.querySelector(".txt").textContent = t.text;
+
+  el.addEventListener("dragstart", () => { dragId = t.id; el.classList.add("dragging"); });
+  el.addEventListener("dragend", () => { dragId = null; el.classList.remove("dragging"); });
+
+  el.querySelector(".check").addEventListener("click", e => {
+    e.stopPropagation();
+    t.done = !t.done; save(); renderQuad(t.q);
+  });
+  el.querySelector(".del-x").addEventListener("click", e => {
+    e.stopPropagation();
+    tasks = tasks.filter(x => x.id !== t.id); save(); renderQuad(t.q);
+  });
+  el.querySelector(".txt").addEventListener("dblclick", () => startEdit(el, t));
+  return el;
+}
+
+function startEdit(el, t) {
+  const span = el.querySelector(".txt");
+  const ta = document.createElement("textarea");
+  ta.className = "txt-edit"; ta.rows = 1; ta.value = t.text;
+  span.replaceWith(ta);
+  ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  el.draggable = false;
+  const grow = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
+  grow(); ta.addEventListener("input", grow);
+  const commit = (keep) => {
+    if (keep && ta.value.trim()) t.text = ta.value.trim();
+    save(); renderQuad(t.q);
+  };
+  ta.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commit(true); }
+    else if (e.key === "Escape") { commit(false); }
+  });
+  ta.addEventListener("blur", () => commit(true));
+}
+
+function renderStats() {
+  const total = tasks.length, done = tasks.filter(t => t.done).length;
+  document.getElementById("s-total").textContent = total;
+  document.getElementById("s-open").textContent = total - done;
+  document.getElementById("s-done").textContent = done;
+}
+
+/* ---------- toolbar actions ---------- */
+function download(name, text, type) {
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+const stamp = () => new Date().toISOString().slice(0, 10);
+
+document.getElementById("btn-json").onclick = () =>
+  download(`eisenhower-${stamp()}.json`, JSON.stringify(tasks, null, 2), "application/json");
+
+document.getElementById("btn-md").onclick = () => {
+  let md = `# Eisenhower Matrix — ${stamp()}\n`;
+  for (const q of QUADS) {
+    const list = tasks.filter(t => t.q === q.id);
+    if (!list.length) continue;
+    md += `\n## ${q.verb} (${q.en})\n`;
+    for (const t of list) md += `- [${t.done ? "x" : " "}] ${t.text}\n`;
+  }
+  download(`eisenhower-${stamp()}.md`, md, "text/markdown");
+};
+
+document.getElementById("btn-import").onclick = () => document.getElementById("file").click();
+document.getElementById("file").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      if (Array.isArray(data)) {
+        tasks = data.filter(t => t && t.text && t.q);
+        save(); QUADS.forEach(q => renderQuad(q.id));
+      }
+    } catch (err) { alert("ไฟล์ไม่ถูกต้อง — ต้องเป็น JSON ที่ส่งออกจากโปรแกรมนี้"); }
+    e.target.value = "";
+  };
+  r.readAsText(f);
+};
+
+document.getElementById("btn-clear").onclick = () => {
+  const n = tasks.filter(t => t.done).length;
+  if (!n) return;
+  if (confirm(`ลบงานที่ทำเสร็จแล้ว ${n} รายการ?`)) {
+    tasks = tasks.filter(t => !t.done);
+    save(); QUADS.forEach(q => renderQuad(q.id));
+  }
+};
+
+/* ---------- export dropdown ---------- */
+(function () {
+  const dd = document.getElementById("export-dd");
+  const trigger = document.getElementById("btn-export");
+  const close = () => { dd.classList.remove("open"); trigger.setAttribute("aria-expanded", "false"); };
+  trigger.addEventListener("click", e => {
+    e.stopPropagation();
+    const open = dd.classList.toggle("open");
+    trigger.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  dd.querySelectorAll(".dd-item").forEach(b => b.addEventListener("click", close));
+  document.addEventListener("click", e => { if (!dd.contains(e.target)) close(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+})();
+
+/* ---------- init ---------- */
+QUADS.forEach(q => renderQuad(q.id));
+renderStats();
+</script>
+</body>
+</html>
