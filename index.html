@@ -637,6 +637,47 @@ function taskEl(t) {
   el.addEventListener("dragstart", () => { dragId = t.id; el.classList.add("dragging"); });
   el.addEventListener("dragend", () => { dragId = null; el.classList.remove("dragging"); });
 
+  let touchDragging = false, touchGhost = null;
+  el.addEventListener("touchstart", e => {
+    const touch = e.touches[0];
+    el._touchX = touch.clientX;
+    el._touchY = touch.clientY;
+  }, { passive: true });
+  el.addEventListener("touchmove", e => {
+    const touch = e.touches[0];
+    if (!touchDragging) {
+      if (Math.hypot(touch.clientX - el._touchX, touch.clientY - el._touchY) < 8) return;
+      touchDragging = true;
+      dragId = t.id;
+      el.classList.add("dragging");
+      touchGhost = el.cloneNode(true);
+      Object.assign(touchGhost.style, {
+        position: "fixed", opacity: "0.7", pointerEvents: "none",
+        zIndex: "9999", width: el.offsetWidth + "px",
+        top: touch.clientY - el.offsetHeight / 2 + "px",
+        left: touch.clientX - el.offsetWidth / 2 + "px",
+      });
+      document.body.appendChild(touchGhost);
+    }
+    if (!touchDragging) return;
+    e.preventDefault();
+    touchGhost.style.top = touch.clientY - touchGhost.offsetHeight / 2 + "px";
+    touchGhost.style.left = touch.clientX - touchGhost.offsetWidth / 2 + "px";
+    document.querySelectorAll(".quad").forEach(q => q.classList.remove("dragover"));
+    document.elementFromPoint(touch.clientX, touch.clientY)?.closest(".quad")?.classList.add("dragover");
+  }, { passive: false });
+  el.addEventListener("touchend", e => {
+    if (!touchDragging) { touchDragging = false; return; }
+    const touch = e.changedTouches[0];
+    touchGhost?.remove(); touchGhost = null;
+    el.classList.remove("dragging");
+    document.querySelectorAll(".quad").forEach(q => q.classList.remove("dragover"));
+    const quad = document.elementFromPoint(touch.clientX, touch.clientY)?.closest(".quad");
+    if (quad && dragId) moveTask(dragId, quad.dataset.q, getDragAfter(quad.querySelector(".quad-body"), touch.clientY));
+    touchDragging = false;
+    dragId = null;
+  });
+
   el.querySelector(".check").addEventListener("click", e => {
     e.stopPropagation();
     t.done = !t.done; save(); renderQuad(t.q);
