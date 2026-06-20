@@ -728,22 +728,35 @@ document.getElementById("btn-clear").onclick = () => {
 
 /* ---------- export dropdown ---------- */
 (function () {
-  const dd = document.getElementById("export-dd");
+  const dd      = document.getElementById("export-dd");
   const trigger = document.getElementById("btn-export");
-  const close = () => { dd.classList.remove("open"); trigger.setAttribute("aria-expanded", "false"); };
+  const menu    = dd.querySelector(".dropdown-menu");
+  document.body.appendChild(menu); // portal: escape ancestor stacking contexts
+
+  const close = () => {
+    dd.classList.remove("open");
+    menu.style.display = "none";
+    trigger.setAttribute("aria-expanded", "false");
+  };
+
   trigger.addEventListener("click", e => {
     e.stopPropagation();
-    const open = dd.classList.toggle("open");
-    trigger.setAttribute("aria-expanded", open ? "true" : "false");
-    if (open) {
+    const isOpen = dd.classList.toggle("open");
+    trigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    if (isOpen) {
       const rect = trigger.getBoundingClientRect();
-      const menu = dd.querySelector(".dropdown-menu");
       menu.style.top  = (rect.bottom + 6) + "px";
       menu.style.left = rect.left + "px";
+      menu.style.display = "flex";
+    } else {
+      menu.style.display = "none";
     }
   });
-  dd.querySelectorAll(".dd-item").forEach(b => b.addEventListener("click", close));
-  document.addEventListener("click", e => { if (!dd.contains(e.target)) close(); });
+
+  menu.querySelectorAll(".dd-item").forEach(b => b.addEventListener("click", close));
+  document.addEventListener("click", e => {
+    if (!dd.contains(e.target) && !menu.contains(e.target)) close();
+  });
   document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
 })();
 
