@@ -105,7 +105,7 @@
   .dropdown { position: relative; }
   .dropdown .caret { font-size: 9px; margin-left: 5px; opacity: .65; }
   .dropdown-menu {
-    position: absolute; top: calc(100% + 6px); left: 0;
+    position: fixed;
     min-width: 210px;
     background: var(--surface);
     border: 1px solid var(--line);
@@ -735,6 +735,12 @@ document.getElementById("btn-clear").onclick = () => {
     e.stopPropagation();
     const open = dd.classList.toggle("open");
     trigger.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) {
+      const rect = trigger.getBoundingClientRect();
+      const menu = dd.querySelector(".dropdown-menu");
+      menu.style.top  = (rect.bottom + 6) + "px";
+      menu.style.left = rect.left + "px";
+    }
   });
   dd.querySelectorAll(".dd-item").forEach(b => b.addEventListener("click", close));
   document.addEventListener("click", e => { if (!dd.contains(e.target)) close(); });
