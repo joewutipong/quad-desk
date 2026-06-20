@@ -365,7 +365,11 @@
 
   /* phones: stack into one priority-ordered column, page scrolls */
   @media (max-width: 720px) {
+    /* unblock page scroll — html/body height:100% was preventing it */
+    html, body { height: auto; }
     main {
+      flex: none;
+      height: auto;
       grid-template-columns: 1fr;
       grid-template-rows: none;
       gap: 12px;
@@ -373,12 +377,12 @@
     .quad {
       grid-column: 1 !important;
       grid-row: auto !important;
-      min-height: 0;
+      min-height: 220px;
       /* a thin colour rail replaces the hidden axes as the priority cue */
       border-left: 3px solid var(--qcolor);
     }
-    /* grow with content instead of an inner scroll pane (avoids nested scroll) */
-    .quad-body { overflow: visible; }
+    /* restore per-quad scroll so .add input is always visible at the bottom */
+    .quad-body { overflow-y: auto; }
     .quad-head { padding: 13px 14px 11px; }
     .quad-head .verb { font-size: 15.5px; }
     footer { justify-content: center; text-align: center; }
@@ -397,6 +401,28 @@
     .tools::-webkit-scrollbar { display: none; }
     .tbtn { flex: none; }
     footer .spacer { display: none; }
+  }
+
+  /* landscape phones: compact chrome, keep 2-col grid, page scrolls for bottom row */
+  @media (orientation: landscape) and (max-height: 500px) {
+    html, body { height: auto; }
+    header {
+      padding: 8px clamp(12px, 3vw, 20px) 8px;
+      flex-wrap: nowrap;
+    }
+    .tagline { display: none; }
+    .brand h1 { font-size: 17px; }
+    main {
+      flex: none;
+      height: auto;
+      gap: 8px;
+      padding-bottom: 8px;
+    }
+    .quad { min-height: 180px; }
+    .quad-body { overflow-y: auto; }
+    .quad-head { padding: 8px 12px 7px; }
+    .quad-head .verb { font-size: 13.5px; }
+    footer { padding: 6px clamp(12px, 3vw, 20px); }
   }
 
   @media (prefers-reduced-motion: reduce) {
